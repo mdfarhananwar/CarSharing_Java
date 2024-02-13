@@ -1,10 +1,7 @@
 package carsharing.db;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,18 +22,27 @@ public class DbClient {
         }
     }
 
-    public Company select(String query) {
-        List<Company> companies = selectForList(query);
-        if (companies.size() == 1) {
-            return companies.get(0);
-        } else if (companies.isEmpty()) {
-            return null;
-        } else {
-            throw new IllegalStateException("Query returned more than one object");
+    public Company selectCompany(String query, int id) {
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement statement = con.prepareStatement(query)) {
+            // Set parameter
+            statement.setInt(1, id);
+
+            try (ResultSet resultSetItem = statement.executeQuery()) {
+                if (resultSetItem.next()) {
+                    // Retrieve column values
+                    int companyId = resultSetItem.getInt("ID");
+                    String name = resultSetItem.getString("NAME");
+                    return new Company(name);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
-    public List<Company> selectForList(String query) {
+    public List<Company> selectForListCompany(String query) {
         List<Company> companies = new ArrayList<>();
 
         try (Connection con = dataSource.getConnection();
@@ -45,17 +51,120 @@ public class DbClient {
         ) {
             while (resultSetItem.next()) {
                 // Retrieve column values
-                resultSetItem.getInt("id");
-                String name = resultSetItem.getString("name");
-                Company company = new Company(name);
+                int companyId = resultSetItem.getInt("ID"); // Retrieve company ID
+                String name = resultSetItem.getString("NAME");
+                Company company = new Company(name, companyId); // Pass the companyId to the Company constructor
                 companies.add(company);
             }
-
             return companies;
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
         return companies;
+    }
+
+    public List<Car> selectForListCar(String query, int companyId) {
+        List<Car> cars = new ArrayList<>();
+
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement statement = con.prepareStatement(query)) {
+            // Set parameter
+            statement.setInt(1, companyId);
+
+            try (ResultSet resultSetItem = statement.executeQuery()) {
+                while (resultSetItem.next()) {
+                    // Retrieve column values
+                    int id = resultSetItem.getInt("ID");
+                    String name = resultSetItem.getString("NAME");
+                    Car car = new Car(name, companyId);
+                    cars.add(car);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return cars;
+    }
+
+    public void addCar(String insertData, String name, int companyId) {
+        if (!isCompanyIdValid(companyId)) {
+            System.out.println("Invalid COMPANY_ID. Aborting car insertion.");
+            return;
+        }
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement statement = con.prepareStatement(insertData)) {
+            // Set parameters
+            statement.setString(1, name);
+            statement.setInt(2, companyId);
+
+            // Execute the update
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    private boolean isCompanyIdValid(int companyId) {
+        String query = "SELECT ID FROM COMPANY WHERE ID = ?";
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement statement = con.prepareStatement(query)) {
+            statement.setInt(1, companyId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next(); // Return true if companyId exists
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // Return false if an exception occurs or companyId does not exist
+    }
+
+    public Company selectCompanyName(String query, String companyName) {
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement statement = con.prepareStatement(query)) {
+            // Set parameter
+            statement.setString(1, companyName);
+            try (ResultSet resultSetItem = statement.executeQuery()) {
+                if (resultSetItem.next()) {
+                    // Retrieve column values
+                    // Make sure to use the correct column name here
+                    //int companyId = resultSetItem.getInt("ID"); // Check if "ID" is the correct column name
+                    String name = resultSetItem.getString("NAME");
+                    return new Company(name);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public void addCompany(String insertData, Company company) {
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement statement = con.prepareStatement(insertData, Statement.RETURN_GENERATED_KEYS)
+        ) {
+            // Set the value of the parameter
+            statement.setString(1, company.getName());
+
+            // Execute the insert query
+            int affectedRows = statement.executeUpdate();
+
+            // Check if any rows were affected
+            if (affectedRows == 0) {
+                throw new SQLException("Creating company failed, no rows affected.");
+            }
+
+            // Retrieve the generated keys (ID)
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    // Set the generated ID to the Company object
+                    int generatedId = generatedKeys.getInt(1);
+                    company.setId(generatedId);
+                } else {
+                    throw new SQLException("Creating company failed, no ID obtained.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

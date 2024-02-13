@@ -8,4 +8,7 @@ public interface CompanyDao {
     void add(Company company);
     void update(Company company);
     void deleteById(int id);
+    void addCar(Car car);
+
+    Company findByName(String companyName);
 }
