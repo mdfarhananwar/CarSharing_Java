@@ -37,15 +37,7 @@ public class DbCompanyDao implements CompanyDao {
 
     @Override
     public Company findById(int id) {
-        Company company = dbClient.selectCompany(SELECT, id);
-
-        if (company != null) {
-            System.out.println("Company: Id " + id + ", found");
-            return company;
-        } else {
-            System.out.println("Company: Id " + id + ", not found");
-            return null;
-        }
+        return dbClient.selectCompany(SELECT, id);
     }
     @Override
     public void update(Company company) {
@@ -65,15 +57,6 @@ public class DbCompanyDao implements CompanyDao {
     }
     @Override
     public Company findByName(String companyName) {
-        Company company = dbClient.selectCompanyName(SELECT_NAME, companyName);
-
-        if (company != null) {
-            System.out.println("Company: Name " + companyName + ", found");
-            System.out.println(company);
-            return company;
-        } else {
-            System.out.println("Company: Name " + companyName + ", not found");
-            return null;
-        }
+        return dbClient.selectCompanyName(SELECT_NAME, companyName);
     }
 }

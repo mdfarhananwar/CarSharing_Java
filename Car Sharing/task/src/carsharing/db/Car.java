@@ -1,15 +1,20 @@
 package carsharing.db;
 
 public class Car {
-    private int id;
+    private Integer id;
     private String name;
-    private int companyId;
+    private Integer companyId;
     Company company;
 
     public Car() {
     }
+    public Car(String name,Integer companyId) {
+        this.name = name;
+        this.companyId = companyId;
+    }
 
-    public Car(String name,int companyId) {
+    public Car(Integer id, String name,Integer companyId) {
+        this.id = id;
         this.name = name;
         this.companyId = companyId;
     }
@@ -18,7 +23,7 @@ public class Car {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -34,7 +39,7 @@ public class Car {
         return companyId;
     }
 
-    public void setCompanyId(int companyId) {
+    public void setCompanyId(Integer companyId) {
         this.companyId = companyId;
     }
 
@@ -44,5 +49,15 @@ public class Car {
 
     public void setCompany(Company company) {
         this.company = company;
+    }
+
+    @Override
+    public String toString() {
+        return "Car{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", companyId=" + companyId +
+                ", company=" + company +
+                '}';
     }
 }

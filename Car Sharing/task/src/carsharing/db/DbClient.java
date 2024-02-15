@@ -31,7 +31,7 @@ public class DbClient {
             try (ResultSet resultSetItem = statement.executeQuery()) {
                 if (resultSetItem.next()) {
                     // Retrieve column values
-                    int companyId = resultSetItem.getInt("ID");
+                    resultSetItem.getInt("ID");
                     String name = resultSetItem.getString("NAME");
                     return new Company(name);
                 }
@@ -77,7 +77,7 @@ public class DbClient {
                     // Retrieve column values
                     int id = resultSetItem.getInt("ID");
                     String name = resultSetItem.getString("NAME");
-                    Car car = new Car(name, companyId);
+                    Car car = new Car(id,name, companyId);
                     cars.add(car);
                 }
             }
@@ -163,6 +163,124 @@ public class DbClient {
                     throw new SQLException("Creating company failed, no ID obtained.");
                 }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<Customer> selectForListCustomer(String query) {
+        List<Customer> customers = new ArrayList<>();
+
+        try (Connection con = dataSource.getConnection();
+             Statement statement = con.createStatement();
+             ResultSet resultSetItem = statement.executeQuery(query)
+        ) {
+            while (resultSetItem.next()) {
+                // Retrieve column values
+                int id = resultSetItem.getInt("ID"); // Retrieve company ID
+                String name = resultSetItem.getString("NAME");
+                Customer customer = new Customer(name, id); // Pass the companyId to the Company constructor
+                customers.add(customer);
+            }
+            return customers;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return customers;
+    }
+
+    public Customer selectCustomer(String query, int id) {
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement statement = con.prepareStatement(query)) {
+            // Set parameter
+            statement.setInt(1, id);
+
+            try (ResultSet resultSetItem = statement.executeQuery()) {
+                if (resultSetItem.next()) {
+                    // Retrieve column values
+                    resultSetItem.getInt("ID");
+                    String name = resultSetItem.getString("NAME");
+                    return new Customer(name);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void addCustomer(String insertData, Customer customer) {
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement statement = con.prepareStatement(insertData, Statement.RETURN_GENERATED_KEYS)
+        ) {
+            // Set the value of the parameter
+            statement.setString(1, customer.getName());
+
+            // Execute the insert query
+            int affectedRows = statement.executeUpdate();
+
+            // Check if any rows were affected
+            if (affectedRows == 0) {
+                throw new SQLException("Creating company failed, no rows affected.");
+            }
+
+            // Retrieve the generated keys (ID)
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    // Set the generated ID to the Company object
+                    int generatedId = generatedKeys.getInt(1);
+                    customer.setId(generatedId);
+                } else {
+                    throw new SQLException("Creating company failed, no ID obtained.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Customer selectCustomerName(String query, String customerName) {
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement statement = con.prepareStatement(query)) {
+            // Set parameter
+            statement.setString(1, customerName);
+            try (ResultSet resultSetItem = statement.executeQuery()) {
+                if (resultSetItem.next()) {
+                    // Retrieve column values
+                    // Make sure to use the correct column name here
+                    //int companyId = resultSetItem.getInt("ID"); // Check if "ID" is the correct column name
+                    String name = resultSetItem.getString("NAME");
+                    return new Customer(name);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void updateRentedCarId(String updateData,Customer customer, Integer carId) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(updateData)) {
+            statement.setString(1, customer.getName());
+            statement.setInt(2, carId);
+            statement.setInt(3, customer.getId());
+
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateNotRentedCarId(String updateData, Customer customer) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(updateData)) {
+            statement.setString(1, customer.getName());
+            statement.setNull(2,Types.INTEGER);
+            statement.setInt(3, customer.getId());
+
+            statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }

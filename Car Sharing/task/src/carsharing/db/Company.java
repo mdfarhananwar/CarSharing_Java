@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Company {
-    private int id;
+    private Integer id;
     private String name;
     private List<Car> cars;
 
@@ -12,7 +12,7 @@ public class Company {
         cars = new ArrayList<>();
     }
 
-    public Company(String name, int id) {
+    public Company(String name, Integer id) {
         this.name = name;
         cars = new ArrayList<>();
         this.id = id;
@@ -22,11 +22,11 @@ public class Company {
         cars = new ArrayList<>();
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
